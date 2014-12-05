@@ -1,0 +1,4 @@
+projekt
+=======
+
+Projekt na labolatoria.
