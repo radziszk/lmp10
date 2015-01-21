@@ -1,12 +1,20 @@
 #include "points.h"
 #include <stdlib.h>
 
+/*
+	Powiększanie struktury punktów
+*/
+
 static int
 realloc_pts_failed (points_t * pts, int size)
 {
   return realloc (pts->x, size * sizeof *pts->x) == NULL
     || realloc (pts->y, size * sizeof *pts->y) == NULL;
 }
+
+/*
+	Wczytanie struktury punktów z pliku
+*/
 
 int
 read_pts_failed (FILE * inf, points_t * pts)

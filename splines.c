@@ -4,6 +4,12 @@
 
 #define MALLOC_FAILED( P, SIZE ) (((P)=malloc( (SIZE)*sizeof( *(P))))==NULL)
 
+
+
+/*
+Alokacja pamieci dla danych funkcji bazowych
+*/
+
 int
 alloc_spl (spline_t * spl, int n)
 {
@@ -15,6 +21,10 @@ alloc_spl (spline_t * spl, int n)
     || MALLOC_FAILED (spl->f3, spl->n);
 }
 
+/*
+Czytanie punktów z pliku
+*/
+ 
 int
 read_spl (FILE * inf, spline_t * spl)
 {
