@@ -1,6 +1,6 @@
 #include "makespl.h"
 #include "piv_ge_solver.h"
-#include <math.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
@@ -13,164 +13,110 @@
  * Funkcje bazowe: n - liczba funkcji a,b - granice przedzialu aproksymacji i
  * - numer funkcji x - wspolrzedna dla ktorej obliczana jest wartosc funkcji
  */
-
-double wielomian[100][100];  // reprezentacja kolejnych wielomianow Legendre'a
-int done = 0,done1=0,done2=0,done3=0;
-double pochodna[100][100];
-double druga_pochodna[100][100];
-double trzecia_pochodna[100][100];
-double fi(double a, double b, int n, int i, double x)
+double
+fi(double a, double b, int n, int i, double x)
 {
-	double przedzial = (b-a)/2;
-	double srodek= a+przedzial;
-	x=(x-srodek)  / przedzial;
-	int stopien = i;
-	int j;
-	double suma=0;
-	if(done==0) 
-	{
-		wielomian[0][0]=1;
-		wielomian[1][1]=1;
-		for(i = 2;i<100;i++)
-		{
-			double wspolczynnik1,wspolczynnik2;
-			wspolczynnik1=(2*((double)i-1) +1) / ((double)i);
-			wspolczynnik2=((double)i-1) / (double)i;
-			wielomian[i][0]=wielomian[i][0] - (wielomian[i-2][0]*wspolczynnik2);
-			for(j=1;j<100;j++)
-			{
-				wielomian[i][j]=wielomian[i-1][j-1]*wspolczynnik1;
-				wielomian[i][j]=wielomian[i][j]-(wielomian[i-2][j]*wspolczynnik2);
-			}
-		}
-		done=1;
+	double		h = (b - a) / (n - 1);
+	double		h3 = h * h * h;
+	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double		hx      [5];
+	int		j;
 
+	for (j = 0; j < 5; j++)
+		hx[j] = a + h * hi[j];
 
-		/*for(i=0;i<10;i++)
-        	{
-                	for(j=0;j<10;j++)
-                	{
-                       		 printf("%lf ",wielomian[i][j]);
-               		}
-
-       			 printf("\n");
-        	}*/
-	}	
-	for(i=0;i<100;i++)
-	{
-		suma=suma+(pow(x,(double)i) * wielomian[stopien][i]); 	
-	}
-	
-	return suma;	
+	if ((x < hx[0]) || (x > hx[4]))
+		return 0;
+	else if (x >= hx[0] && x <= hx[1])
+		return 1 / h3 * (x - hx[0]) * (x - hx[0]) * (x - hx[0]);
+	else if (x > hx[1] && x <= hx[2])
+		return 1 / h3 * (h3 + 3 * h * h * (x - hx[1]) + 3 * h * (x - hx[1]) * (x - hx[1]) - 3 * (x - hx[1]) * (x - hx[1]) * (x - hx[1]));
+	else if (x > hx[2] && x <= hx[3])
+		return 1 / h3 * (h3 + 3 * h * h * (hx[3] - x) + 3 * h * (hx[3] - x) * (hx[3] - x) - 3 * (hx[3] - x) * (hx[3] - x) * (hx[3] - x));
+	else			/* if (x > hx[3]) && (x <= hx[4]) */
+		return 1 / h3 * (hx[4] - x) * (hx[4] - x) * (hx[4] - x);
 }
 
 /* Pierwsza pochodna fi */
 double
 dfi(double a, double b, int n, int i, double x)
 {
-	double przedzial = (b-a)/2;
-        double srodek= a+przedzial;
-        x=(x-srodek)  / przedzial;
-	int stopien=i;
-	int j;
-	double suma=0;	
-	if(done1==0)
-	{
-		for(i=0;i<100;i++)
-		{
-			for(j=0;j<99;j++)
-			{
-					pochodna[i][j]=wielomian[i][j+1];
-			}	
-		}
-		done1=1;
-		/*for(i=0;i<10;i++)
-		{
-                      	for(j=0;j<10;j++)
-                        {
-                                 printf("%lf ",pochodna[i][j]);
-                        }
+	double		h = (b - a) / (n - 1);
+	double		h3 = h * h * h;
+	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double		hx      [5];
+	int		j;
 
-                         printf("\n");
-                }*/
+	for (j = 0; j < 5; j++)
+		hx[j] = a + h * hi[j];
 
-	}	
-	
-	for(i=0;i<100;i++)
-	{
-		suma+= pow(x,(double)i) * pochodna[stopien][i]; 
-	}
-	// dodac wyposywanie pochodnych
-	return suma;
+	if ((x < hx[0]) || (x > hx[4]))
+		return 0;
+	else if (x >= hx[0] && x <= hx[1])
+		return 3 / h3 * (x - hx[0]) * (x - hx[0]);
+	else if (x > hx[1] && x <= hx[2])
+		return 1 / h3 * (3 * h * h + 6 * h * (x - hx[1]) - 9 * (x - hx[1]) * (x - hx[1]));
+	else if (x > hx[2] && x <= hx[3])
+		return 1 / h3 * (-3 * h * h - 6 * h * (hx[3] - x) + 9 * (hx[3] - x) * (hx[3] - x));
+	else			/* if (x > hx[3]) && (x <= hx[4]) */
+		return -3 / h3 * (hx[4] - x) * (hx[4] - x);
 }
 
 /* Druga pochodna fi */
 double
 d2fi(double a, double b, int n, int i, double x)
 {
-	double przedzial = (b-a)/2;
-        double srodek= a+przedzial;
-        x=(x-srodek)  / przedzial;
-	int stopien=i;
-	int j;
-	double suma=0;
-	if(done2==0)
-	{
-		for(i=0;i<100;i++)
-		{
-			for(j=0;j<99;j++)
-			{
-				druga_pochodna[i][j]=pochodna[i][j+1];
-			}
-		}
-		done2=1;
-	}	
-	
-	for(i=0;i<100;i++)
-	{
-		suma+= pow(x,(double)i) * druga_pochodna[stopien][i];
-	}
+	double		h = (b - a) / (n - 1);
+	double		h3 = h * h * h;
+	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double		hx      [5];
+	int		j;
 
-	//dodac wypisywanie drugich pochodnych
-	return suma;
+	for (j = 0; j < 5; j++)
+		hx[j] = a + h * hi[j];
+
+	if ((x < hx[0]) || (x > hx[4]))
+		return 0;
+	else if (x >= hx[0] && x <= hx[1])
+		return 6 / h3 * (x - hx[0]);
+	else if (x > hx[1] && x <= hx[2])
+		return 1 / h3 * (6 * h - 18 * (x - hx[1]));
+	else if (x > hx[2] && x <= hx[3])
+		return 1 / h3 * (6 * h  -18 * (hx[3] - x));
+	else			/* if (x > hx[3]) && (x <= hx[4]) */
+		return 6 / h3 * (hx[4] - x);
 }
 
 /* Trzecia pochodna fi */
 double
 d3fi(double a, double b, int n, int i, double x)
 {
-	double przedzial = (b-a)/2;
-        double srodek= a+przedzial;
-        x=(x-srodek)  / przedzial;
-	int stopien=i;
-        int j;
-        double suma=0;
-        if(done3==0)
-        {
-                for(i=0;i<100;i++)
-                {
-                        for(j=0;j<99;j++)
-                        {
-                                druga_pochodna[i][j]=trzecia_pochodna[i][j+1];
-                        }
-                }
-                done3=1;
-        }
+	double		h = (b - a) / (n - 1);
+	double		h3 = h * h * h;
+	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double		hx      [5];
+	int		j;
 
-        for(i=0;i<100;i++)
-        {
-                suma+= pow(x,(double)i) * trzecia_pochodna[stopien][i];
-        }
+	for (j = 0; j < 5; j++)
+		hx[j] = a + h * hi[j];
 
-        //dodac wypisywanie trzecich pochodnych
-        return suma;
+	if ((x < hx[0]) || (x > hx[4]))
+		return 0;
+	else if (x >= hx[0] && x <= hx[1])
+		return 6 / h3;
+	else if (x > hx[1] && x <= hx[2])
+		return -18 / h3;
+	else if (x > hx[2] && x <= hx[3])
+		return 18 / h3;
+	else			/* if (x > hx[3]) && (x <= hx[4]) */
+		return -6 / h3;
 }
 
 /* Pomocnicza f. do rysowania bazy */
 double
 xfi(double a, double b, int n, int i, FILE *out)
 {
-	/*double		h = (b - a) / (n - 1);
+	double		h = (b - a) / (n - 1);
 	double		h3 = h * h * h;
 	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double		hx      [5];
@@ -186,7 +132,7 @@ xfi(double a, double b, int n, int i, FILE *out)
 	for( j= 0; j < 5; j++ )
 		fprintf( out, " %g", hx[j] );
 	fprintf( out, "]\n" );
-*/}
+}
 
 void
 make_spl(points_t * pts, spline_t * spl)
@@ -235,7 +181,6 @@ make_spl(points_t * pts, spline_t * spl)
 		for (k = 0; k < pts->n; k++)
 			add_to_entry_matrix(eqs, j, nb, y[k] * fi(a, b, nb, j, x[k]));
 	}
-
 #ifdef DEBUG
 	write_matrix(eqs, stdout);
 #endif
@@ -247,7 +192,6 @@ make_spl(points_t * pts, spline_t * spl)
 #ifdef DEBUG
 	write_matrix(eqs, stdout);
 #endif
-
 	if (alloc_spl(spl, nb) == 0) {
 		for (i = 0; i < spl->n; i++) {
 			double xx = spl->x[i] = a + i*(b-a)/(spl->n-1);
@@ -286,7 +230,5 @@ make_spl(points_t * pts, spline_t * spl)
 		}
 		fclose(tst);
 	}
-	free_matrix(eqs);
 #endif
 }
-

@@ -14,11 +14,20 @@ int
 alloc_spl (spline_t * spl, int n)
 {
   spl->n = n;
-  return MALLOC_FAILED (spl->x, spl->n)
+  int stan = ( MALLOC_FAILED (spl->x, spl->n)
     || MALLOC_FAILED (spl->f, spl->n)
     || MALLOC_FAILED (spl->f1, spl->n)
     || MALLOC_FAILED (spl->f2, spl->n)
-    || MALLOC_FAILED (spl->f3, spl->n);
+    || MALLOC_FAILED (spl->f3, spl->n));
+	if(stan)
+	{
+		free(spl->x);
+		free(spl->f);
+		free(spl->f1);
+		free(spl->f2);
+		free(spl->f3);
+	}
+	return stan;
 }
 
 /*
@@ -40,7 +49,6 @@ read_spl (FILE * inf, spline_t * spl)
         (inf, "%lf %lf %lf %lf %lf", spl->x + i, spl->f + i, spl->f1 + i,
          spl->f2 + i, spl->f3 + i) != 5)
       return 1;
-
   return 0;
 }
 
